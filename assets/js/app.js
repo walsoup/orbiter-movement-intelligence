@@ -411,6 +411,7 @@ $("file").onchange = () => {
 
 $("b-sample").onclick = () => {
   if (!requireEngine()) return;
+  $("movement-type").value = "alternating"; // This NASA sample shows treadmill running.
   begin("sample");
   video.src = SAMPLE_CLIP; video.loop = true;
   video.onerror = () => {
@@ -427,6 +428,7 @@ async function probeSampleClip() {
   try {
     const r = await fetch(SAMPLE_CLIP, { method: "HEAD" });
     if (!r.ok) throw new Error(String(r.status));
+    $("sample-hint").textContent = "NASA treadmill running, 19.5 seconds. Running mode is selected automatically. Source and attribution: README.";
   } catch {
     $("b-sample").disabled = true;
     $("sample-hint").textContent = "Not included in this copy — add assets/video/astro-motion.mp4 to enable it (see README). The demonstration, webcam and upload work without it.";

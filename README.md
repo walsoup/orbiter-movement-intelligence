@@ -123,14 +123,21 @@ synthetic demonstration ─────────────► 33 landmarks 
 - One 2D camera cannot measure load, force or true 3D joint angles.
 - Accuracy depends on the whole body being visible in steady light.
 
-## Adding the ISS sample clip
+## ISS sample clip
 
-The **ISS sample clip** button expects a file at
-`assets/video/astro-motion.mp4`. It is not committed to this repository
-(footage licensing and file size), so the button disables itself with an
-explanation when the file is absent. To enable it, drop any suitable public
-exercise clip at that path — e.g. NASA astronaut exercise footage from
-[NASA's image and video library](https://images.nasa.gov) — and reload.
+The **ISS sample clip** button loads the bundled 19.5-second NASA treadmill
+running excerpt at `assets/video/astro-motion.mp4`, the same footage used in
+our demo. Running / alternating movement mode is selected automatically:
+symmetry and readiness are not assessed. This angled, partial-body footage
+is not a validated gait assessment. Use **Stop and see report** when ready.
+
+Source: NASA, "How Do Astronauts Exercise in Space?"
+https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4
+
+NASA source asset listing:
+https://images-api.nasa.gov/asset/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4
+
+Credit: NASA. Footage is an excerpt; no NASA endorsement is implied.
 
 ## Deploying
 
