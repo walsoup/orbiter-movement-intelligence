@@ -11,6 +11,7 @@
 export const AI_PROVIDERS = {
   EXPERT_OFFLINE: "offline",
   GEMINI: "gemini",
+  VULTR: "vultr",
   OPENAI: "openai",
   CUSTOM: "custom",
 };
@@ -20,6 +21,12 @@ export const AI_TIMEOUT_MS = 45000;
 const OFFLINE_PROVIDER_LABEL = "Orbiter In-Flight Expert Engine (Offline/Local)";
 
 const CLOUD_PRESETS = {
+  vultr: {
+    label: "Vultr DeepSeek",
+    endpoint: "https://api.vultrinference.com/v1/chat/completions",
+    defaultModel: "deepseek-v4.1-flash-1017",
+    needsKey: true,
+  },
   openai: {
     label: "OpenAI",
     endpoint: "https://api.openai.com/v1/chat/completions",
@@ -41,6 +48,8 @@ device, T2 treadmill, CEVIS cycle); bone and muscle loss make movement quality
 safety-critical.
 
 Rules:
+- This is experimental 2D video telemetry, not a medical assessment. Never diagnose, certify mission readiness, infer bone loading or prescribe resistance/load.
+- Treat extreme angles and partial tracking as possible camera/visibility errors. State uncertainty before interpreting them.
 - Be concrete: cite the actual numbers you were given (scores, degrees, seconds).
 - Prioritise safety-critical form faults (knee valgus, spinal loading, asymmetry) over praise.
 - Give at most 5 corrective cues, ordered by importance, each one sentence with HOW to fix it.
@@ -115,7 +124,7 @@ async function callChatCompletions({ endpoint, apiKey, model, messages, fetchImp
     res = await fetchFn(endpoint, {
       method: "POST",
       headers,
-      body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 1200 }),
+      body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 1600, ...(endpoint.includes("api.vultrinference.com") ? { reasoning_effort: "minimal" } : {}) }),
       signal: ctrl.signal,
     });
   } catch (e) {
@@ -202,7 +211,7 @@ export async function runAIDeepAnalysis({
   if (p === AI_PROVIDERS.EXPERT_OFFLINE) {
     return { markdown: expertDeepDive({ session, synthesis, customNotes }), providerUsed: OFFLINE_PROVIDER_LABEL };
   }
-  if (p === AI_PROVIDERS.OPENAI || p === AI_PROVIDERS.GEMINI) {
+  if (p === AI_PROVIDERS.OPENAI || p === AI_PROVIDERS.GEMINI || p === AI_PROVIDERS.VULTR) {
     const preset = CLOUD_PRESETS[p];
     const key = (apiKey ?? "").trim();
     if (!key) throw new Error(`Missing API key for ${preset.label}. Paste one, or switch back to the offline expert engine.`);
@@ -231,7 +240,7 @@ export async function runAIDeepAnalysis({
     });
     return { markdown: text, providerUsed: `Custom endpoint (${used})` };
   }
-  throw new Error(`Unknown AI provider "${p}". Pick offline, gemini, openai or custom.`);
+  throw new Error(`Unknown AI provider "${p}". Pick vultr, offline, gemini, openai or custom.`);
 }
 
 /** Offline keyword-routed answer for the "Ask the Flight Surgeon" chat. */
@@ -313,7 +322,7 @@ export async function askAIFlightSurgeon({
   }
   messages.push({ role: "user", content: q });
 
-  if (p === AI_PROVIDERS.OPENAI || p === AI_PROVIDERS.GEMINI) {
+  if (p === AI_PROVIDERS.OPENAI || p === AI_PROVIDERS.GEMINI || p === AI_PROVIDERS.VULTR) {
     const preset = CLOUD_PRESETS[p];
     const key = (apiKey ?? "").trim();
     if (!key) throw new Error(`Missing API key for ${preset.label}.`);
@@ -332,5 +341,5 @@ export async function askAIFlightSurgeon({
     });
     return text;
   }
-  throw new Error(`Unknown AI provider "${p}". Pick offline, gemini, openai or custom.`);
+  throw new Error(`Unknown AI provider "${p}". Pick vultr, offline, gemini, openai or custom.`);
 }

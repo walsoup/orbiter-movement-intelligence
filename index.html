@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Orbiter measures astronaut exercise sessions from a single camera, entirely on-device. Built for NASA Space Apps Challenge 2026 by Maghreb Orbiters.">
+<meta name="description" content="Orbiter measures astronaut exercise sessions from a single camera, with browser pose tracking and optional cloud AI review. Built for NASA Space Apps Challenge 2026 by Maghreb Orbiters.">
 <title>Orbiter — Movement analysis for astronaut exercise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
 <header class="topbar">
   <div class="wordmark">Orbiter<span>.</span></div>
   <div class="tagline">Movement analysis for astronaut exercise sessions — one camera, no wearables.</div>
-  <div class="privacy"><strong>On-device:</strong> video never leaves this computer</div>
+  <div class="privacy"><strong>Video stays local.</strong> AI review sends summary metrics.</div>
 </header>
 
 <div id="engine-status" role="status" aria-live="polite">
@@ -163,11 +163,12 @@
 
     <!-- Mode 2: Deeper AI Analysis & Interactive Coaching -->
     <div id="tab-ai" class="tab-panel" role="tabpanel" hidden>
-      <p class="note">Regular analysis is the fixed read above. Deeper analysis reads those same numbers and writes tips. The built-in coach stays on this computer. Gemini, OpenAI, or a custom address sends the numbers — never the video — to that model.</p>
+      <p class="note">Regular analysis is the fixed read above. Deeper analysis reads those same numbers and writes tips. The built-in coach stays on this computer. Vultr DeepSeek, Gemini, OpenAI, or a custom address sends the numbers — never the video — to that model.</p>
       <div class="ai-config-panel">
         <div class="ai-config-row">
           <label for="ai-provider-select"><strong>AI Engine Provider:</strong></label>
           <select id="ai-provider-select">
+            <option value="vultr">Vultr DeepSeek (Cloud AI / Your API Key)</option>
             <option value="offline">Built-in In-Flight Expert Engine (Offline / Instant / No Key)</option>
             <option value="gemini">Google Gemini API (Cloud LLM)</option>
             <option value="openai">OpenAI API (Cloud LLM)</option>
@@ -176,7 +177,7 @@
         </div>
         <div class="ai-config-row" id="ai-key-container" hidden>
           <label for="ai-api-key"><strong>API Key:</strong></label>
-          <input type="password" id="ai-api-key" placeholder="Enter Gemini or OpenAI API Key (saved in browser)" autocomplete="off">
+          <input type="password" id="ai-api-key" placeholder="Enter your API key (this tab only; never saved)" autocomplete="off">
         </div>
         <div class="ai-config-row" id="ai-endpoint-container" hidden>
           <label for="ai-endpoint-url"><strong>Custom API Endpoint:</strong></label>
@@ -223,7 +224,7 @@
 </dialog>
 
 <footer>
-  <p><strong>What this is.</strong> Orbiter watches an exercise session through one ordinary camera and measures how the movement changes over time: repetitions, joint range of motion, left/right symmetry, tempo and movement energy. On a long mission, that trend — measured the same way every week — is an early signal that a crew member's exercise countermeasures are, or are not, holding up. It needs no wearables and no connection: Google's MediaPipe Pose Landmarker (33 body landmarks) runs entirely in this browser, and every number on this page is derived live from joint geometry.</p>
+  <p><strong>What this is.</strong> Orbiter watches an exercise session through one ordinary camera and measures how the movement changes over time: repetitions, joint range of motion, left/right symmetry, tempo and movement energy. On a long mission, that trend — measured the same way every week — is an early signal that a crew member's exercise countermeasures are, or are not, holding up. It needs no wearables. Pose tracking runs in the browser; optional AI review requires an internet connection and sends summary metrics: Google's MediaPipe Pose Landmarker (33 body landmarks) runs entirely in this browser, and every number on this page is derived live from joint geometry.</p>
   <p><strong>Honest limits.</strong> This is a change-spotting tool, not a clinical measurement. Scores are only comparable between your own sessions recorded under the same setup. Sessions under 15 seconds, or with the body tracked less than half the time, are reported but not scored.</p>
   <p>Built by Maghreb Orbiters for the NASA Space Apps Challenge 2026. Source, method and test results: see the project README.</p>
 </footer>

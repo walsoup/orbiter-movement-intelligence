@@ -491,7 +491,7 @@ function endSession() {
     localStorage.setItem("orbiter.lastSession", JSON.stringify(payload));
     lastReport = payload;
 
-    note.textContent = `Tracking quality ${Math.round(m.quality * 100)}% · ${Math.round(m.durationSeconds)} s · source: ${wasMode}. Analyzed via on-device biomechanical kinematics.`;
+    note.textContent = `Tracking quality ${Math.round(m.quality * 100)}% · ${Math.round(m.durationSeconds)} s · source: ${wasMode}. Browser pose tracking; optional cloud AI review.`;
 
     // 1. Render Score Hero
     heroEl.innerHTML = `
@@ -653,8 +653,10 @@ $("tab-btn-regular").onclick = () => selectTab("regular");
 $("tab-btn-ai").onclick = () => selectTab("ai");
 
 // AI Provider Configuration Setup
-const savedProvider = localStorage.getItem("orbiter.aiProvider") || "offline";
-const savedKey = localStorage.getItem("orbiter.aiKey") || "";
+const savedProvider = localStorage.getItem("orbiter.aiProvider") || "vultr";
+// Remove legacy persisted keys. Credentials now live in this tab only.
+localStorage.removeItem("orbiter.aiKey");
+const savedKey = "";
 const savedEndpoint = localStorage.getItem("orbiter.aiEndpoint") || "";
 
 $("ai-provider-select").value = savedProvider;
@@ -672,7 +674,7 @@ $("ai-provider-select").onchange = (e) => {
 };
 updateProviderVisibility();
 
-$("ai-api-key").oninput = (e) => localStorage.setItem("orbiter.aiKey", e.target.value);
+// No key persistence: closing or reloading this page clears the key field.
 $("ai-endpoint-url").oninput = (e) => localStorage.setItem("orbiter.aiEndpoint", e.target.value);
 
 // Simple markdown to HTML formatter for AI output

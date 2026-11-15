@@ -8,7 +8,7 @@ motion, left/right symmetry, rep tempo and movement energy. On a long mission,
 that trend — measured the same way every week — is an early signal that
 exercise countermeasures are, or are not, holding up.
 
-It needs **no wearables, no sensors and no connection during use**. Pose
+It needs **no wearables or extra sensors**. Browser pose tracking is paired with optional cloud AI review through Vultr DeepSeek, Gemini, OpenAI or a custom endpoint. Cloud review requires internet access and sends summary telemetry, never video. Pose
 estimation (Google MediaPipe Pose Landmarker, 33 body landmarks) runs entirely
 in the browser on the user's device. No video is uploaded, stored or sent
 anywhere — verify it yourself: open the demo, then check the Network tab in
@@ -49,7 +49,7 @@ is the supported path (browsers restrict some features on `file://` pages).
 npm test
 ```
 
-Five automated tests cover the parts that must not be wrong: joint-angle
+Sixteen automated tests cover the parts that must not be wrong: joint-angle
 geometry, the repetition counter (including the rule that small jitter must
 never count as a rep), letterbox mapping for non-16:9 video, and an
 end-to-end check that the synthetic demonstration produces countable reps
@@ -79,9 +79,9 @@ synthetic demonstration ─────────────► 33 landmarks 
 | `assets/js/app.js` | Pose loading, live rendering, CoM tracking, strip chart streams, dual-mode report, JSON export. |
 | `assets/js/pose-math.js` | Kinematics core: joint angles (knees, hips, elbows, shoulders, ankles, spine tilt), Dempster Center of Mass, knee valgus detection, phase-aware RepCounter. |
 | `assets/js/synthesis.js` | Mode 1 Engine: Algorithmic biomechanical synthesis, executive summaries, 4 pillars, rep breakdown table, and microgravity risk rating. |
-| `assets/js/ai-coach.js` | Mode 2 Engine: Deep AI Flight Surgeon review via Gemini, OpenAI, custom endpoints, or built-in offline expert model, plus interactive Q&A. |
+| `assets/js/ai-coach.js` | Mode 2 Engine: Deep AI Flight Surgeon review via Vultr DeepSeek, Gemini, OpenAI, custom endpoints, or a built-in deterministic offline report engine, plus interactive Q&A. |
 | `assets/js/demo-pose.js` | Generates 33-landmark synthetic astronaut exercise poses with realistic kinematics and fatigue drift. |
-| `tests/*.test.js` | Node test suites covering kinematics, synthesis, AI coach, and end-to-end simulation (`npm test`). |
+| `tests/*.test.js` | Node test suites covering kinematics, synthesis, AI coach (including Vultr routing and errors), and end-to-end simulation (`npm test`). |
 | `messageboard.md` | Active collaborative coordination board for parallel agents and team contributors. |
 | `SUBMISSION.md` | Copy ready to paste into the Space Apps submission form. |
 
@@ -106,7 +106,7 @@ synthetic demonstration ─────────────► 33 landmarks 
     clean rep-by-rep breakdown table, prioritized coaching cues, and an ISS
     ARED countermeasure bone-stimulus assessment.
   - **Mode 2 (Deeper AI Analysis):** Sends the structured telemetry payload to
-    Google Gemini, OpenAI, a custom local LLM, or Orbiter's built-in offline
+    Vultr DeepSeek, Google Gemini, OpenAI, a custom local LLM, or Orbiter's built-in offline
     expert engine. Generates a comprehensive clinical flight surgeon review and
     powers an interactive "Ask the Flight Surgeon" chat where crew members can
     ask follow-up questions about their form.
@@ -148,7 +148,7 @@ Any static host works (GitHub Pages, Netlify, Vercel, an S3 bucket):
 - Video frames are processed in-page by the MediaPipe WASM model. The video
   is never uploaded. Regular analysis stays on this computer.
 - Deeper analysis can optionally send the measured numbers (not the video) to
-  Gemini, OpenAI, or an address you type. The built-in coach does not.
+  Vultr DeepSeek, Gemini, OpenAI, or an address you type. Notes and follow-up questions are also sent when you use cloud review. The built-in coach makes no network call.
 - The only stored data is your last session's summary numbers, in your own
   browser's `localStorage`, used for the "vs last session" comparison.
   Clear it any time from the browser's site settings.
@@ -157,3 +157,7 @@ Any static host works (GitHub Pages, Netlify, Vercel, an S3 bucket):
 
 Maghreb Orbiters — built for the NASA Space Apps Challenge 2026.
 *(Add team member names, roles and contact links here before submitting.)*
+
+## Vultr DeepSeek review
+
+Select Vultr DeepSeek in the report, enter your own Vultr Inference API key, then run the review. The key stays in this tab only; it is not committed, embedded, exported or saved in browser storage. The app sends summary telemetry to `https://api.vultrinference.com/v1/chat/completions` using `deepseek-v4.1-flash-1017`. Calls use your inference credits. No shared API key is supplied. Cloud AI is experimental interpretation, not medical advice.
