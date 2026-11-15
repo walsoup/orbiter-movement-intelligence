@@ -1,0 +1,11 @@
+{
+  "name": "orbiter-movement-intelligence",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "On-device movement analysis for astronaut exercise sessions. MediaPipe Pose Landmarker in the browser; no video leaves the device.",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.js"
+  }
+}

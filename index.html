@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Orbiter measures astronaut exercise sessions from a single camera, entirely on-device. Built for NASA Space Apps Challenge 2026 by Maghreb Orbiters.">
+<title>Orbiter — Movement analysis for astronaut exercise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">Orbiter<span>.</span></div>
+  <div class="tagline">Movement analysis for astronaut exercise sessions — one camera, no wearables.</div>
+  <div class="privacy"><strong>On-device:</strong> video never leaves this computer</div>
+</header>
+
+<div id="engine-status" role="status" aria-live="polite">
+  <span id="engine-status-text">Starting…</span>
+  <button class="btn secondary" id="b-retry-engine" hidden>Retry pose engine</button>
+</div>
+
+<main class="layout">
+
+  <div class="side-col">
+    <section class="panel" aria-labelledby="source-title">
+      <h2 class="panel-title" id="source-title">Video source</h2>
+
+      <button class="source-btn primary" id="b-demo">
+        <strong>Run the demonstration</strong>
+        <small>Simulated exercise session. Always works — no camera, file or connection needed. Start here.</small>
+      </button>
+      <button class="source-btn" id="b-cam">
+        <strong>Use webcam</strong>
+        <small>Live session in front of this computer's camera.</small>
+      </button>
+      <button class="source-btn" id="b-upload">
+        <strong>Upload a video</strong>
+        <small>Analyse a recorded exercise clip from this device.</small>
+      </button>
+      <input type="file" id="file" accept="video/*" hidden>
+      <button class="source-btn" id="b-sample">
+        <strong>ISS sample clip</strong>
+        <small>Preloaded exercise footage, if included in this copy.</small>
+      </button>
+      <p class="note" id="sample-hint"></p>
+      <p class="note" id="source-note" aria-live="polite"></p>
+
+      <button class="source-btn stop" id="b-stop" hidden>
+        <strong>Stop and see report</strong>
+        <small>End the session and score it.</small>
+      </button>
+    </section>
+  </div>
+
+  <div class="stage-col">
+    <div id="stage">
+      <video id="video" muted playsinline></video>
+      <canvas id="overlay"></canvas>
+      <div id="stage-empty">
+        <strong>No session running</strong>
+        <p>Run the demonstration to see the analysis working in about ten seconds, or connect a webcam / upload a clip for a real session. Everything is measured live from joint angles — repetitions, range of motion, symmetry and movement energy.</p>
+      </div>
+      <div id="hud" aria-hidden="true"></div>
+      <div id="track-state">Idle</div>
+    </div>
+    <section class="panel" style="margin-top:14px" aria-labelledby="protocol-title">
+      <h2 class="panel-title" id="protocol-title">Getting a usable session</h2>
+      <ol class="protocol">
+        <li>Whole body in frame, head to feet.</li>
+        <li>About 2 metres from the camera.</li>
+        <li>Steady, even light — avoid a bright window behind you.</li>
+        <li>Exercise side-on or facing the camera, at a steady pace.</li>
+      </ol>
+    </section>
+  </div>
+
+  <div class="metrics" role="region" aria-label="Live session metrics">
+    <div class="metric-pair">
+      <div class="metric"><div class="value" id="r-squat">0</div><div class="label">Squat reps</div></div>
+      <div class="metric"><div class="value" id="r-arm">0</div><div class="label">Arm reps</div></div>
+    </div>
+    <div class="metric">
+      <div class="value" id="m-sym">—</div><div class="label">Left and right match</div>
+      <div class="gauge"><i id="g-sym"></i></div>
+    </div>
+    <div class="metric-pair">
+      <div class="metric"><div class="value" id="m-trunk">—</div><div class="label">Chest off upright</div></div>
+      <div class="metric"><div class="value" id="m-phase">—</div><div class="label">What the body is doing</div></div>
+    </div>
+    <div class="metric">
+      <div class="value" id="m-energy">—</div><div class="label">How fast the body is moving</div>
+      <div class="gauge"><i id="g-energy"></i></div>
+    </div>
+    <div class="metric-pair">
+      <div class="metric"><div class="value" id="m-tempo">—</div><div class="label">Time per rep</div></div>
+      <div class="metric"><div class="value" id="m-clock">0:00</div><div class="label">Session time</div></div>
+    </div>
+  </div>
+
+  <p id="live-reading" class="live-reading">Start a session. This line will say what the body is doing.</p>
+
+  <div class="chart-col">
+    <div class="chart-head">
+      <div>
+        <h2>Joint angles & spine posture — live strip chart</h2>
+        <span>Rolling 30 seconds · vertical lines mark counted repetitions · ⊕ indicates Center of Mass</span>
+      </div>
+      <div class="chart-controls">
+        <label for="chart-mode-select">Stream: </label>
+        <select id="chart-mode-select">
+          <option value="all">Knees, Trunk & Elbows</option>
+          <option value="lower">Lower Body & Spine (Knees, Hips, Trunk)</option>
+          <option value="upper">Upper Body (Elbows, Shoulders)</option>
+        </select>
+      </div>
+    </div>
+    <canvas id="chart"></canvas>
+    <div class="legend" id="chart-legend">
+      <span><i style="background:#0b3d91"></i>Left knee</span>
+      <span><i style="background:#2f7fd0"></i>Right knee</span>
+      <span><i style="background:#b54708"></i>Trunk tilt (spine)</span>
+      <span><i style="background:#d92d20"></i>Elbows / Arms</span>
+    </div>
+  </div>
+
+</main>
+
+<dialog id="report" aria-labelledby="report-title">
+  <div class="report-inner">
+    <div class="report-header">
+      <div>
+        <h2 id="report-title">Astronaut Session Intelligence</h2>
+        <p class="note" id="rep-note"></p>
+      </div>
+      <div class="report-tabs" role="tablist">
+        <button class="tab-btn active" id="tab-btn-regular" role="tab" aria-selected="true" aria-controls="tab-regular">
+          ⚡ Regular Analysis
+        </button>
+        <button class="tab-btn" id="tab-btn-ai" role="tab" aria-selected="false" aria-controls="tab-ai">
+          🧠 Deeper AI Flight Surgeon
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode 1: Algorithmic Biomechanical Synthesis -->
+    <div id="tab-regular" class="tab-panel active" role="tabpanel">
+      <div id="report-hero"></div>
+      <div id="report-executive"></div>
+      <div id="report-pillars"></div>
+      <div id="report-cues"></div>
+      <div id="report-reps"></div>
+      <div id="report-microgravity"></div>
+      
+      <details id="raw-stats-details" style="margin-top:16px;">
+        <summary style="cursor:pointer; font-weight:600; font-size:13px; color:var(--ink-2); padding:6px 0;">View Baseline Delta & Raw Telemetry</summary>
+        <div id="rep-body" style="margin-top:8px;"></div>
+      </details>
+    </div>
+
+    <!-- Mode 2: Deeper AI Analysis & Interactive Coaching -->
+    <div id="tab-ai" class="tab-panel" role="tabpanel" hidden>
+      <p class="note">Regular analysis is the fixed read above. Deeper analysis reads those same numbers and writes tips. The built-in coach stays on this computer. Gemini, OpenAI, or a custom address sends the numbers — never the video — to that model.</p>
+      <div class="ai-config-panel">
+        <div class="ai-config-row">
+          <label for="ai-provider-select"><strong>AI Engine Provider:</strong></label>
+          <select id="ai-provider-select">
+            <option value="offline">Built-in In-Flight Expert Engine (Offline / Instant / No Key)</option>
+            <option value="gemini">Google Gemini API (Cloud LLM)</option>
+            <option value="openai">OpenAI API (Cloud LLM)</option>
+            <option value="custom">Custom Endpoint (Ollama / Local LLM / Base URL)</option>
+          </select>
+        </div>
+        <div class="ai-config-row" id="ai-key-container" hidden>
+          <label for="ai-api-key"><strong>API Key:</strong></label>
+          <input type="password" id="ai-api-key" placeholder="Enter Gemini or OpenAI API Key (saved in browser)" autocomplete="off">
+        </div>
+        <div class="ai-config-row" id="ai-endpoint-container" hidden>
+          <label for="ai-endpoint-url"><strong>Custom API Endpoint:</strong></label>
+          <input type="text" id="ai-endpoint-url" placeholder="http://localhost:11434/v1/chat/completions">
+        </div>
+        <div class="ai-config-row">
+          <label for="ai-notes-input"><strong>Crew Member Notes / Specific Sensation (optional):</strong></label>
+          <input type="text" id="ai-notes-input" placeholder="e.g. Felt right knee shift at bottom depth; check lumbar flexion">
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn primary" id="b-run-ai">Run Deeper AI Flight Surgeon Analysis</button>
+        </div>
+      </div>
+
+      <div id="ai-loading" class="ai-status" hidden>
+        <span class="spinner"></span> Consulting NASA Flight Surgeon Knowledgebase & Telemetry Vectors…
+      </div>
+
+      <div id="ai-output" class="ai-output-container" hidden>
+        <div class="ai-output-header">
+          <span class="ai-badge" id="ai-provider-badge">AI Analysis</span>
+          <span class="note" id="ai-timestamp"></span>
+        </div>
+        <div id="ai-markdown-content" class="ai-markdown"></div>
+
+        <!-- Interactive Ask Flight Surgeon Follow-up -->
+        <div class="ai-chat-section">
+          <h3 style="margin:16px 0 6px; font-size:15px; font-weight:700;">💬 Ask the Flight Surgeon</h3>
+          <p class="note" style="margin-bottom:10px;">Ask specific follow-up questions about this session's telemetry, ARED resistance, or microgravity ergonomics:</p>
+          <div id="ai-chat-history"></div>
+          <div class="ai-chat-input-row">
+            <input type="text" id="ai-chat-question" placeholder="e.g. Why did my right leg push harder on rep 4?" style="flex:1;">
+            <button class="btn" id="b-ask-ai">Ask</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-actions">
+      <button class="btn" id="b-export" disabled>Download complete session telemetry & synthesis (JSON)</button>
+      <button class="btn secondary" id="b-close-report">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<footer>
+  <p><strong>What this is.</strong> Orbiter watches an exercise session through one ordinary camera and measures how the movement changes over time: repetitions, joint range of motion, left/right symmetry, tempo and movement energy. On a long mission, that trend — measured the same way every week — is an early signal that a crew member's exercise countermeasures are, or are not, holding up. It needs no wearables and no connection: Google's MediaPipe Pose Landmarker (33 body landmarks) runs entirely in this browser, and every number on this page is derived live from joint geometry.</p>
+  <p><strong>Honest limits.</strong> This is a change-spotting tool, not a clinical measurement. Scores are only comparable between your own sessions recorded under the same setup. Sessions under 15 seconds, or with the body tracked less than half the time, are reported but not scored.</p>
+  <p>Built by Maghreb Orbiters for the NASA Space Apps Challenge 2026. Source, method and test results: see the project README.</p>
+</footer>
+
+<script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
