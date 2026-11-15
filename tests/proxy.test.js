@@ -7,7 +7,7 @@ const request = (body={telemetry:{movementType:'alternating',durationSeconds:20}
 test('hosted client sends only summaries and uses no API credential',async()=>{
  let sent;const fake=async(url,opts)=>{sent={url,...opts};return{ok:true,json:async()=>({text:'Descriptive only',model:'deepseek'})}};
  const result=await runAIDeepAnalysis({provider:'hosted',session:{movementType:'alternating',durationSeconds:20,landmarks:'PRIVATE_RAW',video:'PRIVATE_VIDEO'},fetchImpl:fake});
- assert.equal(sent.url,'/api/review');assert.ok(!JSON.stringify(sent).includes('PRIVATE_'));assert.ok(!sent.headers.Authorization);assert.equal(result.markdown,'Descriptive only');
+ assert.equal(sent.url,'/api/review');assert.ok(!JSON.stringify(sent).includes('PRIVATE_'));assert.ok(!sent.headers.Authorization);assert.equal(result.markdown,'Descriptive only');assert.equal(result.providerUsed,'Hosted AI (no key needed)');
  assert.equal(await askAIFlightSurgeon({provider:'hosted',question:'What can tracking show?',session:{},fetchImpl:fake}),'Descriptive only');
 });
 test('hosted client unavailable response is clear, never masquerades as cloud AI',async()=>{

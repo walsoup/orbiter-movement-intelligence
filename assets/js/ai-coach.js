@@ -157,7 +157,7 @@ async function hostedReview({session, synthesis, customNotes, question, fetchImp
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Hosted AI unavailable. Select the built-in offline coach or your own key.");
   if (!data.text) throw new Error("Hosted AI returned an empty reply.");
-  return {markdown: data.text, providerUsed: `Hosted Vultr DeepSeek (${data.model})`};
+  return {markdown: data.text, providerUsed: "Hosted AI (no key needed)"};
 }
 
 /**

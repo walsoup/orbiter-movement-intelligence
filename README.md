@@ -167,7 +167,7 @@ Maghreb Orbiters — built for the NASA Space Apps Challenge 2026.
 
 ## Vultr DeepSeek review
 
-Choose **Hosted Vultr DeepSeek (no key needed)** on the Vercel site to request
+Choose **Hosted AI (no key needed)** on the Vercel site to request
 an AI review through `/api/review`. The server uses `VULTR_API_KEY` (a Vercel
 Secret, Production only) and requires `VULTR_PUBLIC_AI=true` to enable calls.
 If either is absent, the UI explains that hosted AI is unavailable; the built-in
