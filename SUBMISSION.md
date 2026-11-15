@@ -7,7 +7,7 @@ Maghreb Orbiters
 Create Health Monitoring Software for Astronauts on Space Missions
 
 ## Short summary
-Long missions demand consistent exercise. Orbiter turns ordinary exercise video into visible movement telemetry: joint angles, repetitions, left/right symmetry, tempo and estimated center of mass. Browser pose tracking builds a session report, and DeepSeek through Vultr reviews the measured summary and explains its limits. Video stays in the browser. Our vision is to help spot movement changes early, before the crew feels them.
+Long missions demand consistent exercise. Orbiter turns ordinary exercise video into visible movement telemetry: joint angles, repetitions, left/right symmetry, tempo and estimated center of mass. Browser pose tracking builds a session report, and an AI coach reviews the measured summary and explains its limits. Video stays in the browser. Our vision is to help spot movement changes early, before the crew feels them.
 
 ## Project description
 NASA identifies reduced cardiorespiratory and musculoskeletal fitness, and spaceflight-induced bone changes, among the risks of human spaceflight. Orbiter explores one small part of this problem: making exercise movement easier to inspect using a camera crews could already have.
@@ -47,7 +47,7 @@ The next step is validation against annotated exercise footage and expert review
 - Challenge brief: https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/
 - NASA Human Research Program, Risks of Human Spaceflight: https://www.nasa.gov/hrp/risks/
 - NASA footage used in the demo, "How Do Astronauts Exercise in Space?": https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4
-- Google MediaPipe Pose Landmarker: https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
+- Google MediaPipe Pose Landmarker: https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker
 - Vultr model/API documentation: https://api.vultrinference.com/docs/models/deepseek-v4.1-flash-1017
 
 ## AI use
