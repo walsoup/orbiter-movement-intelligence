@@ -174,7 +174,7 @@ If either is absent, the UI explains that hosted AI is unavailable; the built-in
 offline coach, synthetic demo, and optional own-key providers still work.
 
 The proxy fixes the model to `deepseek-v4.1-flash-1017`, limits the input to
-10 KB and the output to 900 tokens, strips raw arrays/media/landmark fields,
+10 KB and the output to 1600 tokens, strips raw arrays/media/landmark fields,
 accepts only same-origin browser requests, and returns only text, model and
 numeric token usage. Upstream credentials, headers and error bodies are never
 relayed. A best-effort per-instance limit allows 3 requests per IP per hour and

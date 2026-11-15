@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   try {
     const upstream = await fetch('https://api.vultrinference.com/v1/chat/completions', {
       method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env.VULTR_API_KEY}`},
-      body:JSON.stringify({model:MODEL, messages:[{role:'system',content:SYSTEM},{role:'user',content:JSON.stringify(payload)}],max_tokens:900,temperature:0.3,reasoning_effort:'minimal'}),signal:ctrl.signal,
+      body:JSON.stringify({model:MODEL, messages:[{role:'system',content:SYSTEM},{role:'user',content:JSON.stringify(payload)}],max_tokens:1600,temperature:0.3,reasoning_effort:'minimal'}),signal:ctrl.signal,
     });
     if (!upstream.ok) return fail(502,'AI provider unavailable. Try the built-in offline coach.');
     const data = await upstream.json();
