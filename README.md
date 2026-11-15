@@ -49,7 +49,7 @@ is the supported path (browsers restrict some features on `file://` pages).
 npm test
 ```
 
-Sixteen automated tests cover the parts that must not be wrong: joint-angle
+Nineteen automated tests cover the parts that must not be wrong: joint-angle
 geometry, the repetition counter (including the rule that small jitter must
 never count as a rep), letterbox mapping for non-16:9 video, and an
 end-to-end check that the synthetic demonstration produces countable reps
@@ -161,3 +161,7 @@ Maghreb Orbiters — built for the NASA Space Apps Challenge 2026.
 ## Vultr DeepSeek review
 
 Select Vultr DeepSeek in the report, enter your own Vultr Inference API key, then run the review. The key stays in this tab only; it is not committed, embedded, exported or saved in browser storage. The app sends summary telemetry to `https://api.vultrinference.com/v1/chat/completions` using `deepseek-v4.1-flash-1017`. Calls use your inference credits. No shared API key is supplied. Cloud AI is experimental interpretation, not medical advice.
+
+## Running / alternating movement
+
+Select the movement type before starting. Running mode is descriptive only: it does not assess bilateral symmetry, squat/arm repetitions, form faults or readiness. Those fields are omitted from its report and AI telemetry, not replaced with favorable numbers. Phase-matched gait analysis is not implemented. Person-detection coverage is not the same as usable full-body tracking; camera rotation and occlusion can leave few usable frames.

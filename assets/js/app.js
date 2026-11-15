@@ -1,3 +1,4 @@
+import { isAlternating, alternatingTelemetry, alternatingSynthesis, GAIT_LIMIT } from "./movement-mode.js";
 import {
   BONES, KEY_JOINTS, containRect, landmarkToStage, computeCenterOfMass,
 } from "./pose-math.js";
@@ -49,6 +50,7 @@ function resetSession() {
   const trace = new SessionTrace();
   S = {
     trace,
+    movementType: $("movement-type").value,
     startedAt: performance.now(),
     trails: { lw: [], rw: [], la: [], ra: [] },
     kneeReps: trace.squat,
@@ -300,8 +302,10 @@ function processLandmarks(lm, t, srcW, srcH, rect) {
   S.latestAngles = snap.ang;
   S.latestCom = snap.com;
 
+  $("m-sym").style.fontSize = isAlternating(S) ? "20px" : "";
+  $("m-phase").style.fontSize = isAlternating(S) ? "20px" : "";
   const ang = snap.ang;
-  const sentence = describeLive(snap);
+  const sentence = isAlternating(S) ? "Running / alternating mode. Descriptive tracking only; no gait or readiness assessment." : describeLive(snap);
   if (reading) reading.textContent = sentence;
 
   if (mode === "demo") drawDemoBackdrop(rect);
@@ -312,17 +316,17 @@ function processLandmarks(lm, t, srcW, srcH, rect) {
     `Chest ${Math.round(ang.trunkTilt)}° off upright    Hips ${Math.abs(Math.round(ang.pelvicObliquity))}° off level    Feet ${snap.stance.toFixed(1)}× hip width\n` +
     sentence;
 
-  $("r-squat").textContent = S.kneeReps.count;
-  $("r-arm").textContent = S.elbowReps.count;
+  $("r-squat").textContent = isAlternating(S) ? "N/A" : S.kneeReps.count;
+  $("r-arm").textContent = isAlternating(S) ? "N/A" : S.elbowReps.count;
   $("m-energy").textContent = snap.energy ? snap.energy.toFixed(2) : "—";
   $("g-energy").style.width = `${Math.min(100, (snap.energy / 2.2) * 100)}%`;
   const sym = Math.max(0, Math.min(100, 100 - (S.trace.asym.n ? S.trace.asym.mean : 0) * 2));
-  $("m-sym").textContent = S.trace.asym.n ? `${Math.round(sym)}%` : "—";
-  $("g-sym").style.width = `${sym}%`;
+  $("m-sym").textContent = isAlternating(S) ? "Not assessed" : S.trace.asym.n ? `${Math.round(sym)}%` : "—";
+  $("g-sym").style.width = `${isAlternating(S) ? 0 : sym}%`;
   $("m-trunk").textContent = `${Math.round(ang.trunkTilt)}°`;
-  $("m-phase").textContent = PHASE_WORD[snap.phase] || "Moving";
+  $("m-phase").textContent = isAlternating(S) ? "Alternating" : PHASE_WORD[snap.phase] || "Moving";
   const tempo = S.kneeReps.lastTempo ?? S.elbowReps.lastTempo;
-  $("m-tempo").textContent = tempo ? `${tempo.toFixed(1)} s / rep` : "—";
+  $("m-tempo").textContent = isAlternating(S) ? "N/A" : tempo ? `${tempo.toFixed(1)} s / rep` : "—";
   $("m-clock").textContent = `${Math.floor(S.durSum / 60)}:${String(Math.floor(S.durSum % 60)).padStart(2, "0")}`;
   drawChart(t);
 }
@@ -435,7 +439,7 @@ function sessionStats() {
   if (!S?.trace || S.detected < 5) return null;
   const tel = S.trace.toTelemetry();
   tel.source = mode ?? "unknown";
-  return tel;
+  return isAlternating(S) ? alternatingTelemetry(tel) : tel;
 }
 
 let lastReport = null;
@@ -475,6 +479,16 @@ function endSession() {
     note.textContent = `Not scored: tracking quality ${Math.round(m.quality * 100)}% over ${Math.round(m.durationSeconds)} s. A scored session needs at least 50% tracking and 15 s.`;
     heroEl.innerHTML = ""; execEl.innerHTML = ""; pillarsEl.innerHTML = "";
     cuesEl.innerHTML = ""; repsEl.innerHTML = ""; microEl.innerHTML = ""; body.innerHTML = "";
+  } else if (isAlternating(m)) {
+    const synthesis = alternatingSynthesis();
+    currentSynthesis = synthesis;
+    lastReport = { date: new Date().toISOString(), stats: m, synthesis, aiAnalysis: null, source: wasMode };
+    localStorage.setItem("orbiter.lastSession", JSON.stringify(lastReport));
+    note.textContent = `Person detected ${Math.round(m.quality * 100)}% · Usable full-body tracking ${Math.round(m.trackedRatio * 100)}% · ${Math.round(m.durationSeconds)} s · Running / alternating movement`;
+    heroEl.innerHTML = '<div class="exec-card"><h3>Not scored - alternating movement</h3><p>Bilateral symmetry: not assessed. No readiness grade.</p></div>';
+    execEl.textContent = GAIT_LIMIT;
+    pillarsEl.innerHTML = ""; cuesEl.innerHTML = ""; repsEl.innerHTML = ""; microEl.innerHTML = "";
+    body.innerHTML = `<div class="row"><span>Observed knee angle range, left / right</span><b>${m.rom.lKnee}° / ${m.rom.rKnee}°</b></div><p>Image-space ranges only. Camera angle, occlusion and rotation affect these measurements. They are not gait-quality targets.</p>`;
   } else {
     // Run Algorithmic Synthesis (Mode 1)
     const synthesis = synthesizeSession(m);
@@ -612,7 +626,7 @@ function endSession() {
       const good = invert ? pct < 0 : pct > 0;
       return ` <span class="delta ${good ? "good" : "warn"}">${pct >= 0 ? "+" : ""}${pct}% vs your last session</span>`;
     };
-    const prevStats = prev?.stats || prev;
+    const prevStats = isAlternating(prev?.stats) ? null : prev?.stats || prev;
     body.innerHTML = `
       <div class="row"><span>Squat reps (knee cycle)</span><b>${m.reps.squat.count}${delta(m.reps.squat.count, prevStats?.reps?.knee ?? prevStats?.reps?.squat?.count)}</b></div>
       <div class="row"><span>Arm reps (elbow cycle)</span><b>${m.reps.arm.count}${delta(m.reps.arm.count, prevStats?.reps?.elbow ?? prevStats?.reps?.arm?.count)}</b></div>

@@ -1,3 +1,4 @@
+import { isAlternating, alternatingTelemetry, GAIT_LIMIT } from "./movement-mode.js";
 // Mode 2: AI deep analysis. Providers: the built-in offline expert engine
 // (zero-config, instant, no network) plus cloud LLMs over OpenAI-compatible
 // chat-completions endpoints (OpenAI, Gemini's OpenAI-compatible endpoint,
@@ -58,6 +59,7 @@ Rules:
 
 /** Slim Agent-1-shape session stats for LLM context: aggregates only. */
 function slimSession(session) {
+  if (isAlternating(session)) return alternatingTelemetry(session);
   const s = session ?? {};
   const slim = {
     durationSeconds: Math.round(s.durationSeconds ?? 0),
@@ -104,6 +106,7 @@ function slimSynthesis(synthesis) {
 }
 
 function coachUserPrompt(session, synthesis, customNotes) {
+  if (isAlternating(session)) return `Review this running / alternating-movement recording descriptively. ${GAIT_LIMIT} Do not invent scores, asymmetry, form faults, targets or exercise prescriptions. Explain what tracking can and cannot show. Data: ${JSON.stringify(alternatingTelemetry(session))}. User note: ${customNotes || "none"}`;
   const payload = { algorithmicSummary: slimSynthesis(synthesis), telemetry: slimSession(session) };
   let prompt = `Session data (JSON):\n${JSON.stringify(payload, null, 1)}\n\n` +
     `Write the deep-dive review now: 1) verdict in one sentence, 2) what the numbers prove, ` +
@@ -208,6 +211,7 @@ export async function runAIDeepAnalysis({
   session, synthesis, provider, apiKey, customEndpoint, model, customNotes, fetchImpl, timeoutMs,
 } = {}) {
   const p = (provider ?? AI_PROVIDERS.EXPERT_OFFLINE);
+  if (p === AI_PROVIDERS.EXPERT_OFFLINE && isAlternating(session)) return { markdown: GAIT_LIMIT, providerUsed: OFFLINE_PROVIDER_LABEL };
   if (p === AI_PROVIDERS.EXPERT_OFFLINE) {
     return { markdown: expertDeepDive({ session, synthesis, customNotes }), providerUsed: OFFLINE_PROVIDER_LABEL };
   }
@@ -219,7 +223,7 @@ export async function runAIDeepAnalysis({
     const { text, model: used } = await callChatCompletions({
       endpoint: preset.endpoint, apiKey: key, model: useModel,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: isAlternating(session) ? `You explain experimental video telemetry. ${GAIT_LIMIT} Do not diagnose or prescribe exercise. Treat camera rotation and partial views as uncertainty.` : SYSTEM_PROMPT },
         { role: "user", content: coachUserPrompt(session, synthesis, customNotes) },
       ],
       fetchImpl, timeoutMs,
@@ -233,7 +237,7 @@ export async function runAIDeepAnalysis({
     const { text, model: used } = await callChatCompletions({
       endpoint, apiKey: (apiKey ?? "").trim(), model: useModel,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: isAlternating(session) ? `You explain experimental video telemetry. ${GAIT_LIMIT} Do not diagnose or prescribe exercise. Treat camera rotation and partial views as uncertainty.` : SYSTEM_PROMPT },
         { role: "user", content: coachUserPrompt(session, synthesis, customNotes) },
       ],
       fetchImpl, timeoutMs,
@@ -308,9 +312,10 @@ export async function askAIFlightSurgeon({
   const q = (question ?? "").trim();
   if (!q) throw new Error("Type a question first.");
   const p = provider ?? AI_PROVIDERS.EXPERT_OFFLINE;
+  if (p === AI_PROVIDERS.EXPERT_OFFLINE && isAlternating(session)) return GAIT_LIMIT;
   if (p === AI_PROVIDERS.EXPERT_OFFLINE) return expertAnswer({ question: q, session, synthesis });
 
-  const context =
+  const context = isAlternating(session) ? coachUserPrompt(session, synthesis, "") :
     `Same astronaut workout session. Key facts: score ${synthesis?.overallScore ?? "–"}/100, ` +
     `${synthesis?.metrics?.totalSquats ?? 0} squats, ${synthesis?.metrics?.totalArms ?? 0} arm reps, ` +
     `symmetry gap ${synthesis?.metrics?.asymDeg ?? "–"}°, trunk peak ${synthesis?.metrics?.trunkLeanPeak ?? "–"}°. ` +

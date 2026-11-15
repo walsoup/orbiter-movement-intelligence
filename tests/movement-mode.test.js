@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {alternatingTelemetry,alternatingSynthesis} from '../assets/js/movement-mode.js';
+import {runAIDeepAnalysis,askAIFlightSurgeon} from '../assets/js/ai-coach.js';
+const raw={movementType:'alternating',durationSeconds:17,quality:.94,asymmetryDeg:32,symmetry:{overall:32},reps:{squat:{count:12}},rom:{lKnee:79,rKnee:85},kinematics:{valgusEvents:2}};
+test('alternating telemetry omits non-gait scores, asymmetry, rep and form claims',()=>{const t=alternatingTelemetry(raw);assert.equal(t.movementType,'alternating');assert.equal(t.quality,.94);for(const k of ['symmetry','asymmetryDeg','reps','kinematics'])assert.ok(!(k in t));assert.ok(!('overallScore' in alternatingSynthesis()));});
+test('alternating offline analysis and followup refuse an inapplicable assessment',async()=>{const r=await runAIDeepAnalysis({session:raw,provider:'offline'});assert.match(r.markdown,/not assessed/);assert.match(await askAIFlightSurgeon({session:raw,provider:'offline',question:'How good?'}),/not assessed/);});
+test('alternating cloud payload does not leak unfit symmetry or rep values',async()=>{let request;await runAIDeepAnalysis({session:raw,synthesis:{overallScore:27},provider:'vultr',apiKey:'TEST_ONLY',fetchImpl:async(u,o)=>{request=JSON.parse(o.body);return {ok:true,json:async()=>({choices:[{message:{content:'Descriptive only'}}]})}}});const user=request.messages[1].content;assert.match(user,/Do not invent scores/);assert.ok(!user.includes('"overallScore"'));assert.ok(!user.includes('"asymmetryDeg"'));assert.ok(!user.includes('"reps"'));});
