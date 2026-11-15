@@ -6,11 +6,13 @@ import { isAlternating, alternatingTelemetry, GAIT_LIMIT } from "./movement-mode
 //
 // Privacy: only numeric telemetry (angles, reps, scores) is ever sent —
 // never video, never landmarks, never anything that reconstructs the person.
-// A cloud call only happens when the user picks a cloud provider AND presses
-// "Run AI analysis" with (for hosted APIs) their own key.
+// A cloud call only happens after the user picks a cloud provider and presses
+// Run AI analysis. Hosted Vultr uses a server-only key; own-key providers use
+// a tab-only user-entered key.
 
 export const AI_PROVIDERS = {
   EXPERT_OFFLINE: "offline",
+  HOSTED: "hosted",
   GEMINI: "gemini",
   VULTR: "vultr",
   OPENAI: "openai",
@@ -146,6 +148,18 @@ async function callChatCompletions({ endpoint, apiKey, model, messages, fetchImp
   return { text, model: data?.model ?? model };
 }
 
+async function hostedReview({session, synthesis, customNotes, question, fetchImpl}) {
+  const res = await (fetchImpl ?? globalThis.fetch)("/api/review", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({telemetry: slimSession(session), summary: isAlternating(session) ? undefined : slimSynthesis(synthesis), note: customNotes, question}),
+    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Hosted AI unavailable. Select the built-in offline coach or your own key.");
+  if (!data.text) throw new Error("Hosted AI returned an empty reply.");
+  return {markdown: data.text, providerUsed: `Hosted Vultr DeepSeek (${data.model})`};
+}
+
 /**
  * Offline expert engine: a deterministic deep-dive written from the
  * algorithmic synthesis, so Mode 2 works with no key and no network.
@@ -211,6 +225,7 @@ export async function runAIDeepAnalysis({
   session, synthesis, provider, apiKey, customEndpoint, model, customNotes, fetchImpl, timeoutMs,
 } = {}) {
   const p = (provider ?? AI_PROVIDERS.EXPERT_OFFLINE);
+  if (p === AI_PROVIDERS.HOSTED) return hostedReview({session, synthesis, customNotes, fetchImpl});
   if (p === AI_PROVIDERS.EXPERT_OFFLINE && isAlternating(session)) return { markdown: GAIT_LIMIT, providerUsed: OFFLINE_PROVIDER_LABEL };
   if (p === AI_PROVIDERS.EXPERT_OFFLINE) {
     return { markdown: expertDeepDive({ session, synthesis, customNotes }), providerUsed: OFFLINE_PROVIDER_LABEL };
@@ -312,6 +327,7 @@ export async function askAIFlightSurgeon({
   const q = (question ?? "").trim();
   if (!q) throw new Error("Type a question first.");
   const p = provider ?? AI_PROVIDERS.EXPERT_OFFLINE;
+  if (p === AI_PROVIDERS.HOSTED) return (await hostedReview({session, synthesis, question:q, fetchImpl})).markdown;
   if (p === AI_PROVIDERS.EXPERT_OFFLINE && isAlternating(session)) return GAIT_LIMIT;
   if (p === AI_PROVIDERS.EXPERT_OFFLINE) return expertAnswer({ question: q, session, synthesis });
 

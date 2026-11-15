@@ -669,7 +669,7 @@ $("tab-btn-regular").onclick = () => selectTab("regular");
 $("tab-btn-ai").onclick = () => selectTab("ai");
 
 // AI Provider Configuration Setup
-const savedProvider = localStorage.getItem("orbiter.aiProvider") || "vultr";
+const savedProvider = localStorage.getItem("orbiter.aiProvider") || "hosted";
 // Remove legacy persisted keys. Credentials now live in this tab only.
 localStorage.removeItem("orbiter.aiKey");
 const savedKey = "";
@@ -681,7 +681,7 @@ $("ai-endpoint-url").value = savedEndpoint;
 
 function updateProviderVisibility() {
   const p = $("ai-provider-select").value;
-  $("ai-key-container").hidden = p === "offline";
+  $("ai-key-container").hidden = p === "offline" || p === "hosted";
   $("ai-endpoint-container").hidden = p !== "custom";
 }
 $("ai-provider-select").onchange = (e) => {
